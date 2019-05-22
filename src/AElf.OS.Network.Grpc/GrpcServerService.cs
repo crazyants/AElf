@@ -162,42 +162,61 @@ namespace AElf.OS.Network.Grpc
         /// </summary>
         public override async Task<BlockReply> RequestBlock(BlockRequest request, ServerCallContext context)
         {
-            if (request == null || request.Hash == null) 
-                return new BlockReply();
+            BlockWithTransactions block = null;
             
-            Logger.LogDebug($"Peer {context.GetPeerInfo()} requested block {request.Hash}.");
+            try
+            {
+                if (request == null || request.Hash == null) 
+                    return new BlockReply();
+            
+                Logger.LogDebug($"Peer {context.GetPeerInfo()} requested block {request.Hash}.");
 
-            var block = await _blockChainService.GetBlockWithTransactionsByHash(request.Hash);
-            
-            if (block == null)
-                Logger.LogDebug($"Could not find block {request.Hash} for {context.GetPeerInfo()}.");
+                block = await _blockChainService.GetBlockWithTransactionsByHash(request.Hash);
+
+                if (block == null)
+                {
+                    Logger.LogDebug($"Could not find block {request.Hash} for {context.GetPeerInfo()}.");
+                    return new BlockReply();
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.LogError($"Request blocks failed, peer {context.Peer}", e);
+            }
 
             return new BlockReply { Block = block };
         }
 
         public override async Task<BlockList> RequestBlocks(BlocksRequest request, ServerCallContext context)
         {
-            if (request == null || request.PreviousBlockHash == null) 
-                return new BlockList();
-            
-            Logger.LogDebug($"Peer {context.GetPeerInfo()} requested {request.Count} blocks from {request.PreviousBlockHash}.");
-
             var blockList = new BlockList();
             
-            var blocks = await _blockChainService.GetBlocksWithTransactions(request.PreviousBlockHash, request.Count);
-
-            if (blocks == null)
-                return blockList;
-            
-            blockList.Blocks.AddRange(blocks);
-
-            if (blockList.Blocks.Count != request.Count)
-                Logger.LogTrace($"Replied with {blockList.Blocks.Count} blocks for request {request}");
-
-            if (_netOpts.CompressBlocksOnRequest)
+            try
             {
-                var headers = new Metadata{new Metadata.Entry(GrpcConsts.GrpcRequestCompressKey, GrpcConsts.GrpcGzipConst)};
-                await context.WriteResponseHeadersAsync(headers);
+                if (request == null || request.PreviousBlockHash == null) 
+                    return new BlockList();
+            
+                Logger.LogDebug($"Peer {context.GetPeerInfo()} requested {request.Count} blocks from {request.PreviousBlockHash}.");
+            
+                var blocks = await _blockChainService.GetBlocksWithTransactions(request.PreviousBlockHash, request.Count);
+
+                if (blocks == null)
+                    return blockList;
+            
+                blockList.Blocks.AddRange(blocks);
+
+                if (blockList.Blocks.Count != request.Count)
+                    Logger.LogTrace($"Replied with {blockList.Blocks.Count} blocks for request {request}");
+
+                if (_netOpts.CompressBlocksOnRequest)
+                {
+                    var headers = new Metadata{new Metadata.Entry(GrpcConsts.GrpcRequestCompressKey, GrpcConsts.GrpcGzipConst)};
+                    await context.WriteResponseHeadersAsync(headers);
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.LogError($"Request blocks failed, peer {context.Peer}", e);
             }
             
             return blockList;
