@@ -109,8 +109,13 @@ namespace AElf.OS.Network.Grpc
                 catch (RpcException e)
                 {
                     if (i == tries)
+                    {
                         HandleFailure(e, errorMessage);
+                        return default(TResp);
+                    }
                 }
+                
+                await Task.Delay(TimeSpan.FromSeconds(1));
             }
 
             return default(TResp);
