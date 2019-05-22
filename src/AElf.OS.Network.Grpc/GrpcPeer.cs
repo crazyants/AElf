@@ -67,7 +67,7 @@ namespace AElf.OS.Network.Grpc
             var blockRequest = new BlockRequest {Hash = hash};
 
             var blockReply = await RequestAsync(_client, c => c.RequestBlockAsync(blockRequest),
-                $"Block request for {hash} failed.");
+                $"Block request for {hash} failed.", 3);
 
             return blockReply?.Block;
         }
@@ -77,7 +77,7 @@ namespace AElf.OS.Network.Grpc
             var blockRequest = new BlocksRequest {PreviousBlockHash = firstHash, Count = count};
 
             var list = await RequestAsync(_client, c => c.RequestBlocksAsync(blockRequest),
-                $"Get blocks for {{ first: {firstHash}, count: {count} }} failed.");
+                $"Get blocks for {{ first: {firstHash}, count: {count} }} failed.", 3);
 
             if (list == null)
                 return new List<BlockWithTransactions>();
@@ -98,15 +98,19 @@ namespace AElf.OS.Network.Grpc
         }
 
         private async Task<TResp> RequestAsync<TResp>(PeerService.PeerServiceClient client,
-            Func<PeerService.PeerServiceClient, AsyncUnaryCall<TResp>> func, string errorMessage)
+            Func<PeerService.PeerServiceClient, AsyncUnaryCall<TResp>> func, string errorMessage, int tries = 1)
         {
-            try
+            for (int i = 1; i <= tries; i++)
             {
-                return await func(client);
-            }
-            catch (RpcException e)
-            {
-                HandleFailure(e, errorMessage);
+                try
+                {
+                    return await func(client);
+                }
+                catch (RpcException e)
+                {
+                    if (i == tries)
+                        HandleFailure(e, errorMessage);
+                }
             }
 
             return default(TResp);
