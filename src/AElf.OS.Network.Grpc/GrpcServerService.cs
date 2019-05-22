@@ -182,6 +182,7 @@ namespace AElf.OS.Network.Grpc
             catch (Exception e)
             {
                 Logger.LogError(e, $"Request block failed, peer {context.Peer} -- {e.Message}");
+                throw;
             }
 
             return new BlockReply { Block = block };
@@ -217,6 +218,7 @@ namespace AElf.OS.Network.Grpc
             catch (Exception e)
             {
                 Logger.LogError(e, $"Request blocks failed, peer {context.Peer} -- {e.Message}");
+                throw;
             }
             
             return blockList;

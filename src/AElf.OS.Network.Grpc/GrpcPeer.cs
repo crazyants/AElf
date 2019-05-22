@@ -131,7 +131,7 @@ namespace AElf.OS.Network.Grpc
             if (_channel.State == ChannelState.Shutdown)
             {
                 DisconnectionEvent?.Invoke(this, EventArgs.Empty);
-                return;
+                throw new NetworkException($"Channel shutdown: {errorMessage}", rpcException);
             }
 
             if (_channel.State == ChannelState.TransientFailure || _channel.State == ChannelState.Connecting)
