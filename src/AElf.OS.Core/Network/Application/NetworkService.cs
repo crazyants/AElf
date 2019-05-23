@@ -199,9 +199,20 @@ namespace AElf.OS.Network.Application
             {
                 return await func(peer);
             }
-            catch (NetworkException e)
+            catch (AggregateException ex)
             {
-                Logger.LogError(e, $"Error while requesting block from {peer.PeerIpAddress}.");
+                ex.Handle(e => {
+
+                    if (e is NetworkException)
+                    {
+                        Logger.LogError(e, $"Error while requesting from {peer.PeerIpAddress}.");
+                        return true;
+                    }
+
+                    return false;
+                    
+                });
+                
                 return null;
             }
         }

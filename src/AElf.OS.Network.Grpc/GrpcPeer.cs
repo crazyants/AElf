@@ -100,6 +100,7 @@ namespace AElf.OS.Network.Grpc
         private async Task<TResp> RequestAsync<TResp>(PeerService.PeerServiceClient client,
             Func<PeerService.PeerServiceClient, AsyncUnaryCall<TResp>> func, string errorMessage, int tries = 1)
         {
+            var exceptions = new List<NetworkException>();
             for (int i = 1; i <= tries; i++)
             {
                 try
@@ -108,9 +109,11 @@ namespace AElf.OS.Network.Grpc
                 }
                 catch (RpcException e)
                 {
+                    exceptions.Add(new NetworkException(errorMessage, e));
+
                     if (i == tries)
                     {
-                        HandleFailure(e, errorMessage);
+                        HandleFailure(exceptions);
                         return default(TResp);
                     }
                 }
@@ -125,13 +128,13 @@ namespace AElf.OS.Network.Grpc
         /// This method handles the case where the peer is potentially down. If the Rpc call
         /// put the channel in TransientFailure or Connecting, we give the connection a certain time to recover.
         /// </summary>
-        private void HandleFailure(RpcException rpcException, string errorMessage)
+        private void HandleFailure(List<NetworkException> exceptions)
         {
             // If channel has been shutdown (unrecoverable state) remove it.
             if (_channel.State == ChannelState.Shutdown)
             {
                 DisconnectionEvent?.Invoke(this, EventArgs.Empty);
-                throw new NetworkException($"Channel shutdown: {errorMessage}", rpcException);
+                throw new AggregateException($"Failed request to {this}: ", exceptions);
             }
 
             if (_channel.State == ChannelState.TransientFailure || _channel.State == ChannelState.Connecting)
@@ -151,7 +154,7 @@ namespace AElf.OS.Network.Grpc
             }
             else
             {
-                throw new NetworkException($"Failed request to {this}: {errorMessage}", rpcException);
+                throw new AggregateException("Failed request to {this}: ", exceptions);
             }
         }
 
