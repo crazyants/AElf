@@ -117,8 +117,6 @@ namespace AElf.OS.Network.Grpc
                         return default(TResp);
                     }
                 }
-                
-                await Task.Delay(TimeSpan.FromSeconds(1));
             }
 
             return default(TResp);
