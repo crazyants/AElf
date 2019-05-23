@@ -113,7 +113,7 @@ namespace AElf.OS.Consensus.DPos
                 var sureAmount = pubkeyList.Count.Mul(2).Div(3) + 1;
                 if (peersHadBlockAmount >= sureAmount)
                 {
-                    Logger.LogDebug($"LIB found in network layer: height {block.Key}");
+                    Logger.LogDebug($"LIB found in network layer: height {block.Key}, hash: {block.Value}");
                     return new BlockIndex(block.Value, block.Key);
                 }
             }
