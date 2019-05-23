@@ -70,11 +70,13 @@ namespace AElf.OS.Network.Grpc
                 new ChannelOption(ChannelOptions.MaxReceiveMessageLength, GrpcConsts.DefaultMaxReceiveMessageLength)
             });
 
-            var client = new PeerService.PeerServiceClient(channel.Intercept(metadata =>
-            {
-                metadata.Add(GrpcConsts.PubkeyMetadataKey, AsyncHelper.RunSync(() => _accountService.GetPublicKeyAsync()).ToHex());
-                return metadata;
-            }));
+            var client = new PeerService.PeerServiceClient(channel
+                .Intercept(metadata =>
+                    {
+                        metadata.Add(GrpcConsts.PubkeyMetadataKey, AsyncHelper.RunSync(() => _accountService.GetPublicKeyAsync()).ToHex());
+                        return metadata;
+                    })
+                .Intercept(new RetryInterceptor()));
             
             var hsk = await BuildHandshakeAsync();
 
@@ -92,7 +94,7 @@ namespace AElf.OS.Network.Grpc
                 connectReply = await client.ConnectAsync(hsk,
                     new CallOptions().WithDeadline(DateTime.UtcNow.AddSeconds(_networkOptions.PeerDialTimeout)));
             }
-            catch (RpcException e)
+            catch (AggregateException e)
             {
                 await channel.ShutdownAsync();
                 Logger.LogError(e, $"Could not connect to {ipAddress}.");
