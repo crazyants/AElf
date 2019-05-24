@@ -48,14 +48,14 @@ namespace AElf.OS.Handlers
 
         private async Task ProcessNewBlock(AnnouncementReceivedEventData header, string senderPubKey)
         {
-            var announcementEnqueueTime = _blockSyncService.GetBlockSyncAnnouncementEnqueueTime();
-            if (announcementEnqueueTime != null &&
-                TimestampHelper.GetUtcNow() > announcementEnqueueTime + _blockSyncAnnouncementAgeLimit)
-            {
-                Logger.LogWarning(
-                    $"Queue is too busy, announcement enqueue timestamp: {announcementEnqueueTime.ToDateTime()}");
-                return;
-            }
+//            var announcementEnqueueTime = _blockSyncService.GetBlockSyncAnnouncementEnqueueTime();
+//            if (announcementEnqueueTime != null &&
+//                TimestampHelper.GetUtcNow() > announcementEnqueueTime + _blockSyncAnnouncementAgeLimit)
+//            {
+//                Logger.LogWarning(
+//                    $"Queue is too busy, announcement enqueue timestamp: {announcementEnqueueTime.ToDateTime()}");
+//                return;
+//            }
 
             var blockHeight = header.Announce.BlockHeight;
             var blockHash = header.Announce.BlockHash;
