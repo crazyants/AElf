@@ -13,6 +13,10 @@ namespace AElf.OS.BlockSync.Application
     public interface IBlockSyncService
     {
         Task SyncBlockAsync(Hash blockHash, long blockHeight, int batchRequestBlockCount, string suggestedPeerPubKey);
+
+        Timestamp GetBlockSyncAnnouncementEnqueueTime();
+
+        void SetBlockSyncAnnouncementEnqueueTime(Timestamp timestamp);
     }
 
     public class BlockSyncService : IBlockSyncService
@@ -58,7 +62,7 @@ namespace AElf.OS.BlockSync.Application
                 && TimestampHelper.GetUtcNow() >
                 _blockSyncStateProvider.BlockSyncJobEnqueueTime + _blockSyncJobAgeLimit)
             {
-                Logger.LogWarning(
+                            Logger.LogWarning(
                     $"Queue is too busy, block sync job enqueue timestamp: {_blockSyncStateProvider.BlockSyncJobEnqueueTime.ToDateTime()}");
                 return;
             }
@@ -92,6 +96,16 @@ namespace AElf.OS.BlockSync.Application
             }
 
             Logger.LogDebug($"Finishing block sync job, longest chain height: {chain.LongestChainHeight}");
+        }
+
+        public Timestamp GetBlockSyncAnnouncementEnqueueTime()
+        {
+            return _blockSyncStateProvider.BlockSyncAnnouncementEnqueueTime.Clone();
+        }
+
+        public void SetBlockSyncAnnouncementEnqueueTime(Timestamp timestamp)
+        {
+            _blockSyncStateProvider.BlockSyncAnnouncementEnqueueTime = timestamp;
         }
     }
 }
