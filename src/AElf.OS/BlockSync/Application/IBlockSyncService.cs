@@ -26,7 +26,7 @@ namespace AElf.OS.BlockSync.Application
         public ILogger<BlockSyncService> Logger { get; set; }
 
         private readonly Duration _blockSyncJobAgeLimit = new Duration {Nanos = 500_000_000};
-
+        
         public BlockSyncService(IBlockchainService blockchainService,
             IBlockFetchService blockFetchService,
             IBlockDownloadService blockDownloadService,
@@ -45,17 +45,14 @@ namespace AElf.OS.BlockSync.Application
         public async Task SyncBlockAsync(Hash blockHash, long blockHeight, int batchRequestBlockCount,
             string suggestedPeerPubKey)
         {
-            Logger.LogDebug(
-                $"Start block sync job, target height: {blockHash}, target block hash: {blockHeight}, peer: {suggestedPeerPubKey}");
-
-            var chain = await _blockchainService.GetChainAsync();
-
-            _announcementCacheProvider.ClearCache(chain.LastIrreversibleBlockHeight);
             if (_announcementCacheProvider.ContainsAnnouncement(blockHash, blockHeight))
             {
                 Logger.LogWarning($"The block have been synchronized, block hash: {blockHash}");
                 return;
             }
+            
+            var chain = await _blockchainService.GetChainAsync();
+            _announcementCacheProvider.ClearCache(chain.LastIrreversibleBlockHeight);
 
             if (_blockSyncStateProvider.BlockSyncJobEnqueueTime != null
                 && TimestampHelper.GetUtcNow() >
@@ -65,6 +62,9 @@ namespace AElf.OS.BlockSync.Application
                     $"Queue is too busy, block sync job enqueue timestamp: {_blockSyncStateProvider.BlockSyncJobEnqueueTime.ToDateTime()}");
                 return;
             }
+            
+            Logger.LogDebug(
+                $"Start block sync job, target height: {blockHash}, target block hash: {blockHeight}, peer: {suggestedPeerPubKey}");
 
             bool syncResult;
             if (blockHash != null && blockHeight < chain.BestChainHeight + 5)
