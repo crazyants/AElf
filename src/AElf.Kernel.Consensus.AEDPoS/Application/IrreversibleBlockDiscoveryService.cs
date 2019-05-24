@@ -70,6 +70,7 @@ namespace AElf.Kernel.Consensus.AEDPoS.Application
                 if (!_bloom.IsIn(new Bloom(block.Header.Bloom.ToByteArray())))
                 {
                     // No interested event in the block
+                    Logger.LogTrace("No interested event in the block");
                     continue;
                 }
 
@@ -91,13 +92,17 @@ namespace AElf.Kernel.Consensus.AEDPoS.Application
 
                     if (result.Bloom.Length == 0 || !_bloom.IsIn(new Bloom(result.Bloom.ToByteArray())))
                     {
+                        Logger.LogTrace("not in bloom");
                         continue;
                     }
 
                     foreach (var log in result.Logs)
                     {
                         if (log.Address != _contractAddress || log.Name != _logEvent.Name)
+                        {
+                            Logger.LogTrace("Address or name not equal");
                             continue;
+                        }
 
                         var message = new IrreversibleBlockFound();
                         message.MergeFrom(log);

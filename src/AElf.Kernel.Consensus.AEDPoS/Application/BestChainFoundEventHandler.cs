@@ -41,6 +41,7 @@ namespace AElf.Kernel.Consensus.AEDPoS.Application
             
             if (index != null)
             {
+                Logger.LogDebug($"Lib found: BlockHeight: {index.Height}, BlockHash: {index.Hash}");
                 _taskQueueManager.Enqueue(
                     async () =>
                     {
