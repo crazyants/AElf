@@ -59,7 +59,11 @@ namespace AElf.OS.Network.Application
             var peers = _peerPool.GetPeers().ToList();
 
             //if (_peerPool.RecentBlockHeightAndHashMappings.ContainsKey(blockHeader.Height)) return successfulBcasts;
+            
+            Logger.LogDebug("About to add recent block to pool.");
             _peerPool.AddRecentBlockHeightAndHash(blockHeader.Height, blockHeader.GetHash());
+            
+            Logger.LogDebug("About to broadcast to peers.");
             await Task.WhenAll(peers.Select(async peer =>
             {
                 try
@@ -74,6 +78,8 @@ namespace AElf.OS.Network.Application
                     Logger.LogError(e, "Error while sending block.");
                 }
             }));
+            
+            Logger.LogDebug("Broadcast successful !");
             
             return successfulBcasts;
         }

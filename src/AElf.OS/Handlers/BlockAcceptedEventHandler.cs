@@ -15,7 +15,7 @@ namespace AElf.OS.Handlers
 
             public Task HandleEventAsync(BlockAcceptedEvent eventData)
             {
-                NetworkService.BroadcastAnnounceAsync(eventData.BlockHeader);
+                Task.Run(() => NetworkService.BroadcastAnnounceAsync(eventData.BlockHeader));
                 return Task.CompletedTask;
             }
         }
