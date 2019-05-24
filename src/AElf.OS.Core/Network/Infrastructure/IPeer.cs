@@ -7,7 +7,6 @@ namespace AElf.OS.Network.Infrastructure
 {
     public interface IPeer
     {
-        bool IsBest { get; set; }
         string PeerIpAddress { get; }
         string PubKey { get; }
         Hash CurrentBlockHash { get; }
