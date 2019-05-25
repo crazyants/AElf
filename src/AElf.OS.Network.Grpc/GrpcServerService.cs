@@ -17,7 +17,6 @@ using Grpc.Core.Interceptors;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
-using Secp256k1Net;
 using Volo.Abp.EventBus.Local;
 using Volo.Abp.Threading;
 

@@ -135,6 +135,11 @@ namespace AElf.OS.Network.Grpc
 
             return true;
         }
+        
+        public IPeer GetBestPeer()
+        {
+            return GetPeers().FirstOrDefault(p => p.IsBest);
+        }
 
         public List<IPeer> GetPeers(bool includeFailing = false)
         {
