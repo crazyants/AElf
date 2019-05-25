@@ -24,7 +24,7 @@ namespace AElf.OS
 
             peerPoolMock.SetupGet(p => p.RecentBlockHeightAndHashMappings)
                 .Returns(new ReadOnlyDictionary<long, Hash>(new ConcurrentDictionary<long, Hash>()));
-            peerPoolMock.Setup(p => p.AddRecentBlockHeightAndHash(It.IsAny<long>(), It.IsAny<Hash>()));
+            peerPoolMock.Setup(p => p.AddRecentBlockHeightAndHash(It.IsAny<long>(), It.IsAny<Hash>(), It.IsAny<bool>()));
                 
             peerPoolMock.Setup(p => p.FindPeerByPublicKey(It.Is<string>(adr => adr == "p1")))
                 .Returns<string>(adr =>
