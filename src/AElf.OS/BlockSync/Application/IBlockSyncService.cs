@@ -100,7 +100,7 @@ namespace AElf.OS.BlockSync.Application
 
         public Timestamp GetBlockSyncAnnouncementEnqueueTime()
         {
-            return _blockSyncStateProvider.BlockSyncAnnouncementEnqueueTime.Clone();
+            return _blockSyncStateProvider.BlockSyncAnnouncementEnqueueTime?.Clone();
         }
 
         public void SetBlockSyncAnnouncementEnqueueTime(Timestamp timestamp)
