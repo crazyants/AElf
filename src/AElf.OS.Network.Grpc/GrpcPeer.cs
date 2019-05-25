@@ -37,6 +37,7 @@ namespace AElf.OS.Network.Grpc
         public long StartHeight { get; set; }
 
         public IReadOnlyDictionary<long, Hash> RecentBlockHeightAndHashMappings { get; }
+        public bool IsBest { get; set; }
 
         private readonly ConcurrentDictionary<long, Hash> _recentBlockHeightAndHashMappings;
 
