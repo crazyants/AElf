@@ -20,12 +20,15 @@ namespace AElf.OS.Handlers
         public ILogger<PeerConnectedEventHandler> Logger { get; set; }
 
         private readonly IBlockchainService _blockchainService;
+
         private readonly ITaskQueueManager _taskQueueManager;
+
         private readonly IBlockSyncService _blockSyncService;
+
         private readonly NetworkOptions _networkOptions;
-        
+
         private readonly Duration _blockSyncAnnouncementAgeLimit = new Duration {Seconds = 4};
-        private readonly Duration _blockSyncAttachBlockAgeLimit = new Duration {Seconds = 2};
+        private readonly Duration _blockSyncAttachBlockEnqueueTimeAgeLimit = new Duration {Seconds = 2};
 
         public PeerConnectedEventHandler(ITaskQueueManager taskQueueManager,
             IBlockchainService blockchainService,
@@ -57,8 +60,7 @@ namespace AElf.OS.Handlers
             
             var blockSyncAttachBlockEnqueueTime = _blockSyncService.GetBlockSyncAttachBlockEnqueueTime();
             if (blockSyncAttachBlockEnqueueTime != null &&
-                TimestampHelper.GetUtcNow() >
-                blockSyncAttachBlockEnqueueTime + _blockSyncAttachBlockAgeLimit)
+                TimestampHelper.GetUtcNow() > blockSyncAttachBlockEnqueueTime + _blockSyncAttachBlockEnqueueTimeAgeLimit)
             {
                 Logger.LogWarning(
                     $"Block sync attach queue is too busy, enqueue timestamp: {blockSyncAttachBlockEnqueueTime.ToDateTime()}");

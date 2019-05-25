@@ -37,6 +37,13 @@ namespace AElf.OS.Network
         }
         
         [Fact]
+        public async Task GetBlocks_SinglePeerWithNoBlocks_ReturnsNull()
+        {
+            var blocks = await _networkService.GetBlocksAsync(Hash.FromString("block"), 0, 5, "p1", false);
+            Assert.Null(blocks);
+        }
+        
+        [Fact]
         public async Task GetBlocks_TryOthers_ReturnsBlocks()
         {
             var blocks = await _networkService.GetBlocksAsync(Hash.FromString("block"), 0, 5, "p1", true);
@@ -45,10 +52,21 @@ namespace AElf.OS.Network
         }
         
         [Fact]
-        public async Task GetBlocks_FaultyPeer_ShouldTryOthers()
+        public async Task GetBlocks_FromUnknownPeer_ReturnsNull()
+        {
+            var blocks = await _networkService.GetBlocksAsync(Hash.FromString("block"), 0, 5, "a");
+            Assert.Null(blocks);
+            
+            // even with try others it should return null
+            var blocks2 = await _networkService.GetBlocksAsync(Hash.FromString("block"), 0, 5, "a", true);
+            Assert.Null(blocks2);
+        }
+        
+        [Fact]
+        public async Task GetBlocks_FaultyPeer_ReturnsNull()
         {
             var block = await _networkService.GetBlockByHashAsync(Hash.FromString("bHash2"), "failed_peer");
-            Assert.NotNull(block);
+            Assert.Null(block);
         }
 
         #endregion GetBlocks
@@ -91,10 +109,17 @@ namespace AElf.OS.Network
         }
         
         [Fact]
-        public async Task GetBlockByHash_FromUnknownPeer_ShouldGetFromOthers()
+        public async Task GetBlockByHash_NoTryOthers_ReturnsBlocks()
+        {
+            var block = await _networkService.GetBlockByHashAsync(Hash.FromString("bHash2"), "p1", false);
+            Assert.Null(block);
+        }
+        
+        [Fact]
+        public async Task GetBlockByHash_FromUnknownPeer_ReturnsNull()
         {
             var block = await _networkService.GetBlockByHashAsync(Hash.FromString("bHash2"), "failed_peer");
-            Assert.NotNull(block);
+            Assert.Null(block);
         }
 
         #endregion GetBlockByHash
