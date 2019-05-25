@@ -48,6 +48,7 @@ namespace AElf.Kernel.SmartContract.Application
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
+                    Logger.LogTrace("TEMP LOG: Cancel mining.");
                     break;
                 }
 
