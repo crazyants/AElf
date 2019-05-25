@@ -45,7 +45,7 @@ namespace AElf.OS.Network.Application
             return _peerPool.GetPeers(true).ToList();
         }
 
-        public async Task<int> BroadcastAnnounceAsync(BlockHeader blockHeader)
+        public async Task<int> BroadcastAnnounceAsync(BlockHeader blockHeader,bool hasFork)
         {
             int successfulBcasts = 0;
             
@@ -53,15 +53,13 @@ namespace AElf.OS.Network.Application
             {
                 BlockHash = blockHeader.GetHash(),
                 BlockHeight = blockHeader.Height,
-                BlockTime = blockHeader.Time
+                BlockTime = blockHeader.Time,
+                HasFork = hasFork
             };
             
             var peers = _peerPool.GetPeers().ToList();
 
-            //if (_peerPool.RecentBlockHeightAndHashMappings.ContainsKey(blockHeader.Height)) return successfulBcasts;
-            
-            Logger.LogDebug("About to add recent block to pool.");
-            _peerPool.AddRecentBlockHeightAndHash(blockHeader.Height, blockHeader.GetHash());
+            _peerPool.AddRecentBlockHeightAndHash(blockHeader.Height, blockHeader.GetHash(), hasFork);
             
             Logger.LogDebug("About to broadcast to peers.");
             
