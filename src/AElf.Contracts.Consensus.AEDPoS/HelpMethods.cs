@@ -144,7 +144,7 @@ namespace AElf.Contracts.Consensus.AEDPoS
                         if (currentRound.ExtraBlockProducerOfPreviousRound != publicKey)
                         {
                             expectedMiningTime = expectedMiningTime.ToDateTime().AddMilliseconds(producedTinyBlocks
-                                    .Mul(miningInterval).Div(AEDPoSContractConstants.TinyBlocksNumber))
+                                    .Mul(miningInterval).Div(AEDPoSContractConstants.TotalSlots))
                                 .ToTimestamp();
                         }
                         else
@@ -152,14 +152,14 @@ namespace AElf.Contracts.Consensus.AEDPoS
                             // EBP of previous round will produce double tiny blocks. This is for normal time slot of current round.
                             expectedMiningTime = expectedMiningTime.ToDateTime().AddMilliseconds(producedTinyBlocks
                                 .Sub(AEDPoSContractConstants.TinyBlocksNumber)
-                                .Mul(miningInterval).Div(AEDPoSContractConstants.TinyBlocksNumber)).ToTimestamp();
+                                .Mul(miningInterval).Div(AEDPoSContractConstants.TotalSlots)).ToTimestamp();
                         }
                     }
                     else if (previousRound != null)
                     {
                         // EBP of previous round will produce double tiny blocks. This is for extra time slot of previous round.
                         expectedMiningTime = previousRound.GetExtraBlockMiningTime().AddMilliseconds(producedTinyBlocks
-                            .Mul(miningInterval).Div(AEDPoSContractConstants.TinyBlocksNumber)).ToTimestamp();
+                            .Mul(miningInterval).Div(AEDPoSContractConstants.TotalSlots)).ToTimestamp();
                     }
 
                     nextBlockMiningLeftMilliseconds =
@@ -193,7 +193,7 @@ namespace AElf.Contracts.Consensus.AEDPoS
             {
                 ExpectedMiningTime = expectedMiningTime,
                 NextBlockMiningLeftMilliseconds = nextBlockMiningLeftMilliseconds,
-                LimitMillisecondsOfMiningBlock = miningInterval / AEDPoSContractConstants.TinyBlocksNumber,
+                LimitMillisecondsOfMiningBlock = miningInterval.Div(AEDPoSContractConstants.TotalSlots),
                 Hint = hint
             };
         }
