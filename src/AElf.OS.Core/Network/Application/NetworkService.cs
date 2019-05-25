@@ -64,26 +64,37 @@ namespace AElf.OS.Network.Application
             _peerPool.AddRecentBlockHeightAndHash(blockHeader.Height, blockHeader.GetHash());
             
             Logger.LogDebug("About to broadcast to peers.");
-            await Task.WhenAll(peers.Select(async peer =>
-            {
-                try
-                {
-                    Logger.LogDebug($"Block announced: {announce}");
-                    await peer.AnnounceAsync(announce);
-                    
-                    Interlocked.Increment(ref successfulBcasts);
-                }
-                catch (NetworkException e)
-                {
-                    Logger.LogError(e, "Error while sending block.");
-                }
-            }));
+            
+            var tasks = peers.Select(peer => DoAnnounce(peer, announce));
+            await Task.WhenAll(tasks);
             
             Logger.LogDebug("Broadcast successful !");
             
             return successfulBcasts;
         }
 
+        private Task<bool> DoAnnounce(IPeer peer, PeerNewBlockAnnouncement announce)
+        {
+            return Task.Run(async () =>
+            {
+                try
+                {
+                    Logger.LogDebug($"Before broadcast to {peer}.");
+                    await peer.AnnounceAsync(announce);
+                    Logger.LogDebug($"After broadcast to {peer}.");
+
+                    return true;
+                    //Interlocked.Increment(ref successfulBcasts);
+                }
+                catch (NetworkException e)
+                {
+                    Logger.LogError(e, "Error while sending block.");
+                }
+
+                return false;
+            });
+        }
+        
         public async Task<int> BroadcastTransactionAsync(Transaction tx)
         {
             int successfulBcasts = 0;
@@ -93,6 +104,7 @@ namespace AElf.OS.Network.Application
                 try
                 {
                     await peer.SendTransactionAsync(tx);
+                    
                     successfulBcasts++;
                 }
                 catch (NetworkException e)
@@ -196,10 +208,6 @@ namespace AElf.OS.Network.Application
                 catch (NetworkException e)
                 {
                     Logger.LogError(e, $"Error while requesting block from {peer.PeerIpAddress}.");
-                }
-                catch (Exception e)
-                {
-                    Logger.LogError(e, $"General exception while requesting {peer.PeerIpAddress}.");
                 }
                 
                 return (peer, null);
