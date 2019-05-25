@@ -131,7 +131,7 @@ namespace AElf.OS.Network.Grpc
                 Task.Run(async () =>
                 {
                     await _channel.TryWaitForStateChangedAsync(_channel.State,
-                        DateTime.UtcNow.AddSeconds(NetworkConsts.DefaultPeerDialTimeout));
+                        DateTime.UtcNow.AddMilliseconds(NetworkConsts.DefaultPeerDialTimeout));
 
                     // Either we connected again or the state change wait timed out.
                     if (_channel.State == ChannelState.TransientFailure || _channel.State == ChannelState.Connecting)
