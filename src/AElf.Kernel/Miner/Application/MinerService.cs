@@ -145,15 +145,25 @@ namespace AElf.Kernel.Miner.Application
         {
             using (var cts = new CancellationTokenSource())
             {
+                Logger.LogTrace("TEMP LOG: Mining Starting");
                 var block = await GenerateBlock(previousBlockHash, previousBlockHeight, blockTime);
                 var systemTransactions = await GenerateSystemTransactions(previousBlockHash, previousBlockHeight);
+
+                Logger.LogTrace("TEMP LOG: System txs generated");
 
                 var pending = transactions;
 
                 cts.CancelAfter(timeSpan);
+                
                 block = await _blockExecutingService.ExecuteBlockAsync(block.Header,
                     systemTransactions, pending, cts.Token);
+                
+                Logger.LogTrace("TEMP LOG: Txs executed.");
+
                 await SignBlockAsync(block);
+                
+                Logger.LogTrace("TEMP LOG: Block signed.");
+
                 Logger.LogInformation($"Generated block: {block.ToDiagnosticString()}, " +
                                       $"previous: {block.Header.PreviousBlockHash}, " +
                                       $"transactions: {block.Body.TransactionsCount}");

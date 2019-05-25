@@ -33,6 +33,8 @@ namespace AElf.Kernel.SmartContractExecution.Application
             var status = await _blockchainService.AttachBlockToChainAsync(chain, block);
             
             await _blockchainExecutingService.ExecuteBlocksAttachedToLongestChain(chain, status);
+            
+            Logger.LogTrace("TEMP LOG: Block attached.");
         }
     }
 }

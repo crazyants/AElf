@@ -38,6 +38,8 @@ namespace AElf.Kernel.Consensus.Application
 
         public async Task TriggerConsensusAsync(ChainContext chainContext)
         {
+            Logger.LogTrace("TEMP LOG: Trigger consensus.");
+
             var now = DateTime.UtcNow;
             _blockTimeProvider.SetBlockTime(now);
 

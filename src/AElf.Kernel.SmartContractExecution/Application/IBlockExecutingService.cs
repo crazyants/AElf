@@ -145,6 +145,8 @@ namespace AElf.Kernel.SmartContractExecution.Application
                     BlockHeight = chain.BestChainHeight,
                     ExecutedBlocks = successLinks.Select(p => p.BlockHash).ToList()
                 });
+                
+                Logger.LogTrace("TEMP LOG: Best chain found.");
             }
 
             Logger.LogInformation(

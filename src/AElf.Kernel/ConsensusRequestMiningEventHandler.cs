@@ -38,20 +38,27 @@ namespace AElf.Kernel
             {
                 _taskQueueManager.Enqueue(async () =>
                 {
+                    Logger.LogTrace("TEMP LOG: Mining Triggered.");
+
+                    var blockExecutionTime = eventData.BlockExecutionTime;
                     if (eventData.BlockTime.ToTimestamp() > new Timestamp {Seconds = 3600} &&
                         eventData.BlockTime.ToTimestamp() + eventData.BlockExecutionTime.ToDuration() <
                         DateTime.UtcNow.ToTimestamp())
                     {
+                        blockExecutionTime = TimeSpan.FromMilliseconds(0);
                         Logger.LogTrace(
                             $"Will cancel mining due to timeout: Actual mining time: {eventData.BlockTime.ToTimestamp()}, execution limit: {eventData.BlockExecutionTime.TotalMilliseconds} ms.");
-                        return;
                     }
 
                     var block = await _minerService.MineAsync(eventData.PreviousBlockHash,
                         eventData.PreviousBlockHeight,
-                        eventData.BlockTime, eventData.BlockExecutionTime);
+                        eventData.BlockTime, blockExecutionTime);
+
+                    Logger.LogTrace("TEMP LOG: Mining finished.");
 
                     await _blockchainService.AddBlockAsync(block);
+
+                    Logger.LogTrace("TEMP LOG: Block added.");
 
                     // Self mined block do not need do verify
                     _taskQueueManager.Enqueue(async () => await _blockAttachService.AttachBlockAsync(block),
