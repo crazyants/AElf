@@ -28,6 +28,7 @@ namespace AElf.OS.Handlers
         private readonly NetworkOptions _networkOptions;
 
         private readonly Duration _blockSyncAnnouncementAgeLimit = new Duration {Seconds = 4};
+        private readonly Duration _blockSyncAttachBlockEnqueueTimeAgeLimit = new Duration {Seconds = 2};
 
         public PeerConnectedEventHandler(ITaskQueueManager taskQueueManager,
             IBlockchainService blockchainService,
@@ -53,7 +54,16 @@ namespace AElf.OS.Handlers
                 TimestampHelper.GetUtcNow() > announcementEnqueueTime + _blockSyncAnnouncementAgeLimit)
             {
                 Logger.LogWarning(
-                    $"Queue is too busy, announcement enqueue timestamp: {announcementEnqueueTime.ToDateTime()}");
+                    $"Block sync queue is too busy, enqueue timestamp: {announcementEnqueueTime.ToDateTime()}");
+                return;
+            }
+            
+            var blockSyncAttachBlockEnqueueTime = _blockSyncService.GetBlockSyncAttachBlockEnqueueTime();
+            if (blockSyncAttachBlockEnqueueTime != null &&
+                TimestampHelper.GetUtcNow() > blockSyncAttachBlockEnqueueTime + _blockSyncAttachBlockEnqueueTimeAgeLimit)
+            {
+                Logger.LogWarning(
+                    $"Block sync attach queue is too busy, enqueue timestamp: {blockSyncAttachBlockEnqueueTime.ToDateTime()}");
                 return;
             }
 
