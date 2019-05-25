@@ -17,7 +17,7 @@ namespace AElf.OS.BlockSync.Infrastructure
         public Timestamp BlockSyncJobEnqueueTime { get; set; }
         
         public Timestamp BlockSyncAnnouncementEnqueueTime { get; set; }
-
+        
         public Timestamp BlockSyncAttachBlockEnqueueTime { get; set; }
     }
 }

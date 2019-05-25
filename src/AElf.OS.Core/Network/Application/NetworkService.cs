@@ -42,7 +42,7 @@ namespace AElf.OS.Network.Application
 
         public List<IPeer> GetPeers()
         {
-            return _peerPool.GetPeers(true).ToList();
+            return _peerPool.GetPeers(true).ToList(); 
         }
 
         public async Task<int> BroadcastAnnounceAsync(BlockHeader blockHeader)
@@ -58,15 +58,18 @@ namespace AElf.OS.Network.Application
             
             var peers = _peerPool.GetPeers().ToList();
 
-            //if (_peerPool.RecentBlockHeightAndHashMappings.ContainsKey(blockHeader.Height)) return successfulBcasts;
-            
-            Logger.LogDebug("About to add recent block to pool.");
             _peerPool.AddRecentBlockHeightAndHash(blockHeader.Height, blockHeader.GetHash());
             
             Logger.LogDebug("About to broadcast to peers.");
             
-            var tasks = peers.Select(peer => DoAnnounce(peer, announce));
+            var tasks = peers.Select(peer => DoAnnounce(peer, announce)).ToList();
             await Task.WhenAll(tasks);
+
+            foreach (var finishedtask in tasks.Where(t => t.IsCompleted))
+            {
+                if (finishedtask.Result == true)
+                    successfulBcasts++;
+            }
             
             Logger.LogDebug("Broadcast successful !");
             
@@ -84,7 +87,6 @@ namespace AElf.OS.Network.Application
                     Logger.LogDebug($"After broadcast {announce.BlockHash} to {peer}.");
 
                     return true;
-                    //Interlocked.Increment(ref successfulBcasts);
                 }
                 catch (NetworkException e)
                 {
@@ -119,9 +121,6 @@ namespace AElf.OS.Network.Application
         public async Task<List<BlockWithTransactions>> GetBlocksAsync(Hash previousBlock, long previousHeight,
             int count, string peerPubKey = null, bool tryOthersIfFail = false)
         {
-            if (string.IsNullOrWhiteSpace(peerPubKey))
-                throw new InvalidOperationException();
-
             var peers = SelectPeers(peerPubKey);
 
             var blocks = await RequestAsync(peers, p => p.GetBlocksAsync(previousBlock, count), 
@@ -218,51 +217,51 @@ namespace AElf.OS.Network.Application
         private async Task<T> RequestAsync<T>(List<IPeer> peers, Func<IPeer, Task<T>> func,
             Predicate<T> validationFunc, string suggested) where T : class
         {
-            try
+            var tasks = peers.Select(peer => DoRequest(peer, func));
+            Task<(IPeer, T)> finished = null;
+
+            List<Task<(IPeer, T)>> taskList = tasks.ToList();
+            
+            while (taskList.Count > 0)
             {
+                var next = await Task.WhenAny(taskList);
 
-                var tasks = peers.Select(peer => DoRequest(peer, func));
-                Task<(IPeer, T)> finished = null;
-                
-                Logger.LogDebug($"About to iterate.");
-
-                List<Task<(IPeer, T)>> taskList = tasks.ToList();
-                
-                Logger.LogDebug($"After to list.");
-                
-                while (taskList.Count > 0)
+                if (validationFunc(next.Result.Item2))
                 {
-                    var next = await Task.WhenAny(taskList);
-
-                    if (validationFunc(next.Result.Item2))
-                    {
-                        finished = next;
-                        break;
-                    }
-
-                    taskList.Remove(next);
+                    finished = next;
+                    break;
                 }
 
-                if (finished == null)
-                {
-                    Logger.LogDebug($"No peer succeeded.");
-                    return null;
-                }
-
-                IPeer taskPeer = finished.Result.Item1;
-                T taskRes = finished.Result.Item2;
-                
-                Logger?.LogWarning($"Suggested {suggested}, used {taskPeer.PubKey}");
-                Logger.LogDebug($"First replied {taskRes} : {taskPeer}.");
-
-                return taskRes;
+                taskList.Remove(next);
             }
-            catch (Exception e)
+
+            if (finished == null)
             {
-                Logger.LogError(e, "BIG EXCEPTION !");
+                Logger.LogDebug($"No peer succeeded.");
+                return null;
             }
 
-            return null;
+            IPeer taskPeer = finished.Result.Item1;
+            T taskRes = finished.Result.Item2;
+            
+            if (!taskPeer.IsBest)
+            {
+                Logger.LogDebug($"New best peer found: {taskPeer}.");
+
+                foreach (var peerToReset in _peerPool.GetPeers(true))
+                {
+                    peerToReset.IsBest = false;
+                }
+                
+                taskPeer.IsBest = true;
+            }
+            
+            if (suggested != taskPeer.PubKey)
+                Logger.LogWarning($"Suggested {suggested}, used {taskPeer.PubKey}");
+            
+            Logger.LogDebug($"First replied {taskRes} : {taskPeer}.");
+
+            return taskRes;
         }
 
         public Task<long> GetBestChainHeightAsync(string peerPubKey = null)

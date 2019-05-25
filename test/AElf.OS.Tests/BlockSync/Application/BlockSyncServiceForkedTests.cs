@@ -6,6 +6,7 @@ using Xunit;
 
 namespace AElf.OS.BlockSync.Application
 {
+    // TODO: Need more test for block sync
     public sealed class BlockSyncServiceForkedTests : SyncForkedTestBase
     {
         private readonly IBlockchainService _blockChainService;
@@ -32,6 +33,8 @@ namespace AElf.OS.BlockSync.Application
 
         private void DisposeQueue()
         {
+            _taskQueueManager.GetQueue(OSConsts.BlockSyncQueueName).Dispose();
+            _taskQueueManager.GetQueue(OSConsts.BlockSyncAttachQueueName).Dispose();
             _taskQueueManager.GetQueue(KernelConstants.UpdateChainQueueName).Dispose();
         }
     }

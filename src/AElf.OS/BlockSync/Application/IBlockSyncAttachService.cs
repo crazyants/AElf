@@ -11,9 +11,7 @@ namespace AElf.OS.BlockSync.Application
 {
     public interface IBlockSyncAttachService
     {
-        Task AttachBlockWithTransactionsAsync(BlockWithTransactions blockWithTransactions);
-
-        void EnqueueAttachBlockWithTransactionsJobAsync(BlockWithTransactions blockWithTransactions);
+        void EnqueueAttachBlockWithTransactionsJob(BlockWithTransactions blockWithTransactions);
     }
 
     public class BlockSyncAttachService : IBlockSyncAttachService
@@ -37,7 +35,7 @@ namespace AElf.OS.BlockSync.Application
             _blockchainService = blockchainService;
         }
 
-        public async Task AttachBlockWithTransactionsAsync(BlockWithTransactions blockWithTransactions)
+        private async Task AttachBlockWithTransactionsAsync(BlockWithTransactions blockWithTransactions)
         {
             var valid = await _validationService.ValidateBlockBeforeAttachAsync(blockWithTransactions);
             if (!valid)
@@ -66,7 +64,7 @@ namespace AElf.OS.BlockSync.Application
                 KernelConstants.UpdateChainQueueName);
         }
 
-        public void EnqueueAttachBlockWithTransactionsJobAsync(BlockWithTransactions blockWithTransactions)
+        public void EnqueueAttachBlockWithTransactionsJob(BlockWithTransactions blockWithTransactions)
         {
             var enqueueTimestamp = TimestampHelper.GetUtcNow();
             _taskQueueManager.Enqueue(async () =>

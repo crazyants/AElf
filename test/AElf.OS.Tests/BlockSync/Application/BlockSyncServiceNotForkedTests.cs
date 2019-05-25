@@ -68,6 +68,8 @@ namespace AElf.OS.BlockSync.Application
 
         private void DisposeQueue()
         {
+            _taskQueueManager.GetQueue(OSConsts.BlockSyncQueueName).Dispose();
+            _taskQueueManager.GetQueue(OSConsts.BlockSyncAttachQueueName).Dispose();
             _taskQueueManager.GetQueue(KernelConstants.UpdateChainQueueName).Dispose();
         }
     }
