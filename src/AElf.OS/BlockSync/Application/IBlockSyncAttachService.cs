@@ -12,6 +12,8 @@ namespace AElf.OS.BlockSync.Application
     public interface IBlockSyncAttachService
     {
         Task AttachBlockWithTransactionsAsync(BlockWithTransactions blockWithTransactions);
+
+        void EnqueueAttachBlockWithTransactionsJobAsync(BlockWithTransactions blockWithTransactions);
     }
 
     public class BlockSyncAttachService : IBlockSyncAttachService
@@ -64,5 +66,22 @@ namespace AElf.OS.BlockSync.Application
                 KernelConstants.UpdateChainQueueName);
         }
 
+        public void EnqueueAttachBlockWithTransactionsJobAsync(BlockWithTransactions blockWithTransactions)
+        {
+            var enqueueTimestamp = TimestampHelper.GetUtcNow();
+            _taskQueueManager.Enqueue(async () =>
+                {
+                    try
+                    {
+                        _blockSyncStateProvider.BlockSyncAttachBlockEnqueueTime = enqueueTimestamp;
+                        await AttachBlockWithTransactionsAsync(blockWithTransactions);
+                    }
+                    finally
+                    {
+                        _blockSyncStateProvider.BlockSyncAttachBlockEnqueueTime = null;
+                    }
+                },
+                OSConsts.BlockSyncAttachQueueName);
+        }
     }
 }

@@ -87,8 +87,7 @@ namespace AElf.OS.BlockSync.Application
                     Logger.LogDebug(
                         $"Processing block {blockWithTransactions},  longest chain hash: {chain.LongestChainHash}, best chain hash : {chain.BestChainHash}");
                     
-                    _taskQueueManager.Enqueue(async () => await _blockSyncAttachService.AttachBlockWithTransactionsAsync(blockWithTransactions),
-                        OSConsts.BlockSyncAttachQueueName);
+                    _blockSyncAttachService.EnqueueAttachBlockWithTransactionsJobAsync(blockWithTransactions);
 
                     downloadBlockCount++;
                 }
